@@ -9,7 +9,7 @@ const app = express();
 const PORT = 5000;
 
 // Middleware
-app.use(cors());
+app.use(cors({\n  credentials: true,\n  origin: 'http://localhost:5173'\n}));\n\n// Auth Middleware\nfunction requireAuth(req, res, next) {\n  if (req.session.userId) {\n    next();\n  } else {\n    res.status(401).json({ error: 'Unauthorized' });\n  }\n}\n\nfunction requireAdmin(req, res, next) {\n  db.query('SELECT role FROM users WHERE id = ?', [req.session.userId], (err, results) => {\n    if (err || results.length === 0 || results[0].role !== 'admin') {\n      return res.status(403).json({ error: 'Admin access required' });\n    }\n    req.userRole = results[0].role;\n    next();\n  });\n}
 app.use(bodyParser.json());
 app.use(session({
   secret: 'smartpark_epms_secret',
@@ -48,14 +48,7 @@ app.post('/api/login', (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     
-    const user = results[0];
-    if (password === user.password) {
-      req.session.userId = user.id;
-      req.session.username = user.username;
-      return res.json({ message: 'Login successful', user: { id: user.id, username: user.username } });
-    } else {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
+    const user = results[0];\n    if (bcrypt.compareSync(password, user.password)) {\n      req.session.userId = user.id;\n      req.session.username = user.username;\n      req.session.role = user.role;\n      return res.json({ message: 'Login successful', user: { id: user.id, username: user.username, role: user.role } });\n    } else {\n      return res.status(401).json({ error: 'Invalid credentials' });\n    }
   });
 });
 
@@ -66,13 +59,7 @@ app.post('/api/logout', (req, res) => {
 });
 
 // Check session
-app.get('/api/session', (req, res) => {
-  if (req.session.userId) {
-    res.json({ authenticated: true, username: req.session.username });
-  } else {
-    res.json({ authenticated: false });
-  }
-});
+app.get('/api/session', (req, res) => {\n  if (req.session.userId) {\n    res.json({ authenticated: true, username: req.session.username, role: req.session.role });\n  } else {\n    res.json({ authenticated: false });\n  }\n});
 
 // ==================== DEPARTMENT ROUTES ====================
 

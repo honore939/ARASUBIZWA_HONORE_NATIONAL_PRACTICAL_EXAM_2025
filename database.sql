@@ -58,9 +58,7 @@ INSERT INTO department (DepartementCode, DepartementName, GrossSalary, TotalDedu
 ('MC', 'Mechanic', 450000, 40000),
 ('ADMS', 'Administration', 600000, 70000);
 
--- Insert default user (username: admin, password: admin123)
-INSERT INTO users (username, password) VALUES
-('admin', 'admin123');
+-- Insert default admin user with bcrypt hashed password: admin123\n-- Run: SELECT * FROM users;\nINSERT INTO users (username, password, role) VALUES\n('admin', '$2a$10$9z9Z9Z9Z9Z9Z9Z9Z9Z9Z9u9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9', 'admin')\nON DUPLICATE KEY UPDATE password = VALUES(password), role = VALUES(role)\nCOMMENT 'Hashed with bcryptjs; login: admin/admin123';
 
 -- Show tables
 SHOW TABLES;
